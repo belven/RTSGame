@@ -10,6 +10,8 @@
 #include <Components/BoxComponent.h>
 #include "DrawDebugHelpers.h"
 #include "Animal.h"
+#include "RTSGameCharacter.h"
+#include "BaseAI.h"
 
 ARTSGamePlayerController::ARTSGamePlayerController()
 {
@@ -185,6 +187,24 @@ void ARTSGamePlayerController::OnSetDestinationReleased()
 	}
 }
 
+void ARTSGamePlayerController::AttackTarget(IDamagableInterface* target) {
+	if (selectedUnits.Num() > 0) {
+		for (ARTSGameCharacter* c : selectedUnits) {
+			ABaseAI* con = Cast<ABaseAI>(c->GetController());
+			con->AttackTarget(target);
+		}
+	}
+}
+
+void ARTSGamePlayerController::GatherResources(IResourceInterface* res) {
+	if (selectedUnits.Num() > 0) {
+		for (ARTSGameCharacter* c : selectedUnits) {
+			ABaseAI* con = Cast<ABaseAI>(c->GetController());
+			con->GatherResource(res);
+		}
+	}
+}
+
 void ARTSGamePlayerController::RightClick()
 {
 	FHitResult TraceHitResult;
@@ -194,13 +214,23 @@ void ARTSGamePlayerController::RightClick()
 	{
 		AActor* targetFound = TraceHitResult.GetActor();
 
-		if (targetFound->Implements<UResourceInterface>()) {
-			IResourceInterface* res = GetResource(targetFound);
-			res->TakeResources(10);
+		bool isDamagable = targetFound->Implements<UDamagableInterface>();
+		bool isResource = targetFound->Implements<UResourceInterface>();
+
+		if (isDamagable) {
+			IDamagableInterface* damagable = GetDamagable(targetFound);
+
+			if (damagable->GetHealth() > 0) {
+				AttackTarget(damagable);
+			}
+			else if (isResource) {
+				IResourceInterface* res = GetResource(targetFound);
+				GatherResources(res);
+			}
 		}
-		else if (targetFound->Implements<UDamagableInterface>()) {
-			IDamagableInterface* res = GetDamagable(targetFound);
-			res->TakeDamage(10);
+		else if (isResource) {
+			IResourceInterface* res = GetResource(targetFound);
+			GatherResources(res);
 		}
 	}
 }
@@ -212,10 +242,15 @@ void ARTSGamePlayerController::SelectUnits()
 
 	TArray<AActor*> actors;
 	selectionArea->GetOverlappingActors(actors);
+
 	if (actors.Num() > 0) {
+		selectedUnits.Empty();
 		for (AActor* a : actors) {
-			if (a->IsA(AAnimal::StaticClass())) {
-				int32 test = 0;
+			if (a->IsA(ARTSGameCharacter::StaticClass())) {
+				ARTSGameCharacter* character = Cast<ARTSGameCharacter>(a);
+
+				if (character->GetType() != ECharacterType::Animal)
+					selectedUnits.Add(character);
 			}
 		}
 	}

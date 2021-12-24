@@ -5,6 +5,14 @@
 #include "DamagableInterface.h"
 #include "RTSGameCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class  ECharacterType : uint8 {
+	Worker,
+	Military,
+	Animal,
+	End
+};
+
 USTRUCT(BlueprintType)
 struct FCharacterStats
 {
@@ -18,6 +26,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		FString characterName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		ECharacterType characterType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		int32  team;
@@ -36,6 +47,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		FCharacterStats stats;
+
+	FORCEINLINE ECharacterType GetType() { return stats.characterType; }
 
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void TakeDamage(float damage) override;

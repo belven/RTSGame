@@ -7,6 +7,7 @@
 
 class UDecalComponent;
 class UBoxComponent;
+class ARTSGameCharacter;
 
 UCLASS()
 class ARTSGamePlayerController : public APlayerController
@@ -31,6 +32,8 @@ protected:
 	void OnSetDestinationPressed();
 	void OnSetDestinationReleased();
 
+	void AttackTarget(IDamagableInterface* target);
+	void GatherResources(IResourceInterface* res);
 	void RightClick();
 	void SelectUnits();
 
@@ -40,6 +43,7 @@ protected:
 	void ZoomIn();
 	void ZoomOut();
 private:
+	TArray<ARTSGameCharacter*> selectedUnits;
 	TMap<EResourceType, UMaterial*> materialCursors;
 	UDecalComponent* CursorToWorld;
 
@@ -59,5 +63,3 @@ private:
 
 	FHitResult hit;
 };
-
-

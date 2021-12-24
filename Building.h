@@ -37,7 +37,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	FBuildingStats buildingStats;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		FBuildingStats buildingStats;
 
 public:
 	virtual void Tick(float DeltaTime) override;

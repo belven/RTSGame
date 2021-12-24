@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "BaseAI.h"
 
 ARTSGameCharacter::ARTSGameCharacter()
 {
@@ -20,6 +21,8 @@ ARTSGameCharacter::ARTSGameCharacter()
 
 	stats.currentHealth = 100;
 	stats.maxHealth = 100;
+
+	AIControllerClass = ABaseAI::StaticClass();
 }
 
 void ARTSGameCharacter::Tick(float DeltaSeconds)
