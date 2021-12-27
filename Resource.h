@@ -13,7 +13,7 @@ public:
 		float  amount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		EResourceType type;
+		EResourceType resourceType;
 };
 
 UCLASS()

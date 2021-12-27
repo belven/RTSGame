@@ -2,5 +2,5 @@
 
 AWood::AWood()
 {
-	stats.type = EResourceType::Wood;
+	stats.resourceType = EResourceType::Wood;
 }

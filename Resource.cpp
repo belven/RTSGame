@@ -12,7 +12,7 @@ void AResource::TakeResources(int32 amount)
 
 EResourceType AResource::GetType()
 {
-	return stats.type;
+	return stats.resourceType;
 }
 
 int32 AResource::GetAmount()

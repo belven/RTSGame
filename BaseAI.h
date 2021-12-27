@@ -12,6 +12,7 @@ UENUM(BlueprintType)
 enum class  EActionType : uint8 {
 	Attack,
 	Gather,
+	DepositingResources,
 	Build,
 	Move,
 	Patrol,
@@ -26,14 +27,25 @@ public:
 	ABaseAI();
 	virtual void Tick(float DeltaTime) override;
 
+	const FString EnumToString(const TCHAR* Enum, int32 EnumValue);
+	void DepositeResource();
 	void Gather();
 	void DamageTarget();
 	void AttackTarget(IDamagableInterface* target);
 	void GatherResource(IResourceInterface* resource);
+	ARTSGameCharacter* GetRTSCharacter();
 
+	AActor* GetTargetActor() const { return targetActor; }
+	void SetTargetActor(AActor* val) { preiviousTarget = targetActor; targetActor = val; }
 private:
 	FTimerHandle ActionRate;
+	AActor* preiviousTarget;
 	AActor* targetActor;
 	EActionType currentAction;
+	float actionDelay;
+	ARTSGameCharacter* rtsCharacter;
+
+	bool canPerformActions;
+	void CanPerformActions();
 	
 };

@@ -2,5 +2,5 @@
 
 AStone::AStone()
 {
-	stats.type = EResourceType::Stone;
+	stats.resourceType = EResourceType::Stone;
 }

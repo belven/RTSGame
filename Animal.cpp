@@ -4,7 +4,7 @@ AAnimal::AAnimal()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	resourceStats.amount = 25;
-	resourceStats.type = EResourceType::Food;
+	resourceStats.resourceType = EResourceType::Food;
 	stats.characterType = ECharacterType::Animal;
 }
 
@@ -15,7 +15,7 @@ void AAnimal::TakeResources(int32 amount)
 
 EResourceType AAnimal::GetType()
 {
-	return resourceStats.type;
+	return resourceStats.resourceType;
 }
 
 int32 AAnimal::GetAmount()

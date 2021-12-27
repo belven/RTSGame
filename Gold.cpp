@@ -2,5 +2,5 @@
 
 AGold::AGold()
 {
-	stats.type = EResourceType::Gold;
+	stats.resourceType = EResourceType::Gold;
 }

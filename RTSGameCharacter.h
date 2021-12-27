@@ -3,6 +3,7 @@
 #include "GameFramework/Character.h"
 #include "Resource.h"
 #include "DamagableInterface.h"
+#include "ResourceInterface.h"
 #include "RTSGameCharacter.generated.h"
 
 UENUM(BlueprintType)
@@ -25,6 +26,9 @@ public:
 		float  maxHealth;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		int32  carryWeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		FString characterName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
@@ -35,6 +39,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		int32  owner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		int32  gatherAmount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+		TMap<EResourceType, FResourceStats> resources;
 };
 
 UCLASS(Blueprintable)
@@ -50,10 +60,18 @@ public:
 
 	FORCEINLINE ECharacterType GetType() { return stats.characterType; }
 
+	virtual int32 GetWeight();
+	virtual int32 GetCarryWeight();
+	virtual int32 GetGatherAmount();
+	virtual FCharacterStats& GetStats();
+
+	virtual void RecieveResources(int32 amount, IResourceInterface* ri);
+
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void TakeDamage(float damage) override;
 	virtual float GetHealth() override;
 	virtual float GetMaxHealth() override;
+
 	virtual int32 GetTeam() override;
 	virtual int32 GetOwner() override;
 };

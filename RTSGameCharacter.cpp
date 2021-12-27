@@ -21,8 +21,50 @@ ARTSGameCharacter::ARTSGameCharacter()
 
 	stats.currentHealth = 100;
 	stats.maxHealth = 100;
+	stats.carryWeight = 20;
+	stats.gatherAmount = 5;
 
 	AIControllerClass = ABaseAI::StaticClass();
+}
+
+int32 ARTSGameCharacter::GetWeight()
+{
+	int32 wieght = 0;
+	for (TPair<EResourceType, FResourceStats>& res : stats.resources) {
+		wieght += res.Value.amount;
+	}
+	return wieght;
+}
+
+int32 ARTSGameCharacter::GetCarryWeight()
+{
+	return stats.carryWeight;
+}
+
+int32 ARTSGameCharacter::GetGatherAmount()
+{
+	return stats.gatherAmount;
+}
+
+FCharacterStats& ARTSGameCharacter::GetStats()
+{
+	return stats;
+}
+
+void ARTSGameCharacter::RecieveResources(int32 amount, IResourceInterface* ri)
+{
+	FResourceStats* resStats = stats.resources.Find(ri->GetType());
+
+	if (resStats == NULL) {
+		FResourceStats res;
+		res.amount = amount;
+		res.resourceType = ri->GetType();
+
+		stats.resources.Add(res.resourceType, res);
+	}
+	else {
+		resStats->amount += amount;
+	}
 }
 
 void ARTSGameCharacter::Tick(float DeltaSeconds)

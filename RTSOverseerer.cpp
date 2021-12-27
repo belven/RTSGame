@@ -30,25 +30,25 @@ ARTSOverseerer::ARTSOverseerer()
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	FResourceStats wood;
-	wood.type = EResourceType::Wood;
+	wood.resourceType = EResourceType::Wood;
 	wood.amount = 50;
 
 	resourses.Add(EResourceType::Wood, wood);
 
 	FResourceStats gold;
-	gold.type = EResourceType::Gold;
+	gold.resourceType = EResourceType::Gold;
 	gold.amount = 50;
 
 	resourses.Add(EResourceType::Gold, gold);
 
 	FResourceStats stone;
-	stone.type = EResourceType::Stone;
+	stone.resourceType = EResourceType::Stone;
 	stone.amount = 50;
 
 	resourses.Add(EResourceType::Stone, stone);
 
 	FResourceStats food;
-	food.type = EResourceType::Food;
+	food.resourceType = EResourceType::Food;
 	food.amount = 50;
 
 	resourses.Add(EResourceType::Food, food);
