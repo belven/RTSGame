@@ -9,9 +9,10 @@ void IStorageInterface::AddItem(FString name, int32 amount)
 {
 	bool itemFound = false;
 
-	for (FItem item : GetItems()) {
+	for (FItem& item : GetItems()) {
 		if (item.name.Equals(name)) {
 			item.amount += amount;
+			itemFound = true;
 			break;
 		}
 	}
