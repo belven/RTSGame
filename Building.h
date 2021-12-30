@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "DamagableInterface.h"
+#include "TeamInterface.h"
 #include "Building.generated.h"
 
 USTRUCT(BlueprintType)
@@ -27,7 +28,7 @@ public:
 
 
 UCLASS()
-class RTSGAME_API ABuilding : public AActor, public IDamagableInterface
+class RTSGAME_API ABuilding : public AActor, public IDamagableInterface, public ITeamInterface
 {
 	GENERATED_BODY()
 
@@ -46,5 +47,5 @@ public:
 	virtual float GetHealth() override;
 	virtual float GetMaxHealth() override;
 	virtual int32 GetTeam() override;
-	virtual int32 GetOwner() override;
+	virtual int32 GetOwningPlayer() override;
 };

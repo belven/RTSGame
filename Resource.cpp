@@ -8,6 +8,11 @@ AResource::AResource()
 void AResource::TakeResources(int32 amount)
 {
 	stats.amount -= amount;
+
+	if (stats.amount <= 0) {
+		SetActorHiddenInGame(true);
+		SetActorEnableCollision(false);
+	}
 }
 
 EResourceType AResource::GetType()

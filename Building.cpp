@@ -35,10 +35,10 @@ float ABuilding::GetMaxHealth()
 
 int32 ABuilding::GetTeam()
 {
-	return 0;
+	return buildingStats.team;
 }
 
-int32 ABuilding::GetOwner()
+int32 ABuilding::GetOwningPlayer()
 {
-	return 0;
+	return buildingStats.owner;
 }

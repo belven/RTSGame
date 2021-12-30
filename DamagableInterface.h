@@ -16,6 +16,4 @@ public:
 	virtual void TakeDamage(float damage);
 	virtual float GetHealth();
 	virtual float GetMaxHealth();
-	virtual int32 GetTeam();
-	virtual int32 GetOwner();
 };

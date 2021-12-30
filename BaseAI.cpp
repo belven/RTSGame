@@ -71,8 +71,11 @@ void ABaseAI::DepositeResource() {
 		TArray<AActor*> storageActors;
 		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UStorageInterface::StaticClass(), storageActors);
 
-		if (storageActors.Num() > 0) {
-			SetTargetActor(storageActors[0]);
+		for (AActor* store : storageActors) {
+			ITeamInterface* team = Cast<ITeamInterface>(store);
+			if (team->GetOwningPlayer() == GetRTSCharacter()->GetOwningPlayer()) {
+				SetTargetActor(store);
+			}
 		}
 	}
 	else {

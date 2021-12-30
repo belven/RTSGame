@@ -4,6 +4,7 @@
 #include "Resource.h"
 #include "DamagableInterface.h"
 #include "ResourceInterface.h"
+#include "TeamInterface.h"
 #include "RTSGameCharacter.generated.h"
 
 UENUM(BlueprintType)
@@ -48,7 +49,7 @@ public:
 };
 
 UCLASS(Blueprintable)
-class ARTSGameCharacter : public ACharacter, public IDamagableInterface
+class ARTSGameCharacter : public ACharacter, public IDamagableInterface, public ITeamInterface
 {
 	GENERATED_BODY()
 
@@ -73,5 +74,5 @@ public:
 	virtual float GetMaxHealth() override;
 
 	virtual int32 GetTeam() override;
-	virtual int32 GetOwner() override;
+	virtual int32 GetOwningPlayer() override;
 };

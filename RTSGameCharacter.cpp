@@ -7,7 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "BaseAI.h"
 
-ARTSGameCharacter::ARTSGameCharacter()
+ARTSGameCharacter::ARTSGameCharacter() : Super()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 	
@@ -89,10 +89,10 @@ float ARTSGameCharacter::GetMaxHealth()
 
 int32 ARTSGameCharacter::GetTeam()
 {
-	return 0;
+	return stats.team;
 }
 
-int32 ARTSGameCharacter::GetOwner()
+int32 ARTSGameCharacter::GetOwningPlayer()
 {
-	return 0;
+	return stats.owner;
 }

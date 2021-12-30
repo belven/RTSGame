@@ -3,11 +3,14 @@
 #include "GameFramework/PlayerController.h"
 #include "ResourceInterface.h"
 #include "DamagableInterface.h"
+#include "CharacterDetailsUI.h"
 #include "RTSGamePlayerController.generated.h"
 
 class UDecalComponent;
 class UBoxComponent;
 class ARTSGameCharacter;
+class ARTSOverseerer;
+class ITeamInterface;
 
 UCLASS()
 class ARTSGamePlayerController : public APlayerController
@@ -22,6 +25,7 @@ protected:
 	uint32 leftMouseDown : 1;
 
 	virtual void PlayerTick(float DeltaTime) override;
+	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
 	void OnResetVR();
@@ -35,12 +39,15 @@ protected:
 	void AttackTarget(IDamagableInterface* target);
 	void GatherResources(IResourceInterface* res);
 	void RightClick();
+	void MoveUnits(FVector loc);
 	void SelectUnits();
 
 	IResourceInterface* GetResource(AActor* other);
+	ITeamInterface* GetTeam(AActor* other);
 	IDamagableInterface* GetDamagable(AActor* other);
 
 	void ZoomIn();
+	ARTSOverseerer* GetOversereer();
 	void ZoomOut();
 private:
 	TArray<ARTSGameCharacter*> selectedUnits;
@@ -55,6 +62,7 @@ private:
 	float dist;
 
 	UBoxComponent* selectionArea;
+	ARTSOverseerer* overseerer;
 
 	FVector mouseStart;
 	FVector mouseEnd;
@@ -62,4 +70,7 @@ private:
 	FVector selectionSize;
 
 	FHitResult hit;
+
+	TSubclassOf<UUserWidget> characterUItemplate;
+	UCharacterDetailsUI* characterUI;
 };

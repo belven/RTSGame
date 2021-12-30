@@ -12,6 +12,7 @@
 #include "Animal.h"
 #include "RTSGameCharacter.h"
 #include "BaseAI.h"
+#include "CharacterDetailsUI.h"
 
 ARTSGamePlayerController::ARTSGamePlayerController()
 {
@@ -46,6 +47,13 @@ ARTSGamePlayerController::ARTSGamePlayerController()
 	if (Food_Cursor.Succeeded())
 	{
 		materialCursors.Add(EResourceType::Food, Food_Cursor.Object);
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> characterDisplay(TEXT("WidgetBlueprint'/Game/TopDownCPP/Blueprints/CharacterDetails.CharacterDetails_C'"));
+
+	if (characterDisplay.Class != nullptr)
+	{
+		characterUItemplate = characterDisplay.Class;
 	}
 }
 
@@ -99,6 +107,22 @@ void ARTSGamePlayerController::PlayerTick(float DeltaTime)
 					CursorToWorld->SetDecalMaterial(decal);
 			}
 		}
+	}
+}
+
+void ARTSGamePlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (characterUItemplate != nullptr)
+	{
+		characterUI = CreateWidget<UCharacterDetailsUI>(this, characterUItemplate);
+		characterUI->AddToViewport();
+		characterUI->SetVisibility(ESlateVisibility::Visible);
+
+		FCharacterStats cs;
+		cs.currentHealth = 123123;
+		characterUI->SetStats(cs);
 	}
 }
 
@@ -220,8 +244,18 @@ void ARTSGamePlayerController::RightClick()
 		if (isDamagable) {
 			IDamagableInterface* damagable = GetDamagable(targetFound);
 
+			FCharacterStats cs;
+			cs.currentHealth = damagable->GetHealth();
+			characterUI->SetStats(cs);
+
 			if (damagable->GetHealth() > 0) {
-				AttackTarget(damagable);
+				ITeamInterface* team = GetTeam(targetFound);
+				int32 targetTeam = team->GetTeam();
+				int32 overseererTeam = GetOversereer()->GetTeam();
+
+				if (team->GetOwningPlayer() == -1 || targetTeam != overseererTeam) {
+					AttackTarget(damagable);
+				}
 			}
 			else if (isResource) {
 				IResourceInterface* res = GetResource(targetFound);
@@ -231,6 +265,19 @@ void ARTSGamePlayerController::RightClick()
 		else if (isResource) {
 			IResourceInterface* res = GetResource(targetFound);
 			GatherResources(res);
+		}
+		else {
+			MoveUnits(TraceHitResult.Location);
+		}
+	}
+}
+
+void ARTSGamePlayerController::MoveUnits(FVector loc)
+{
+	if (selectedUnits.Num() > 0) {
+		for (ARTSGameCharacter* c : selectedUnits) {
+			ABaseAI* con = Cast<ABaseAI>(c->GetController());
+			con->MoveToLocation(loc);
 		}
 	}
 }
@@ -261,6 +308,10 @@ IResourceInterface* ARTSGamePlayerController::GetResource(AActor* other)
 	return  Cast<IResourceInterface>(other);
 }
 
+ITeamInterface* ARTSGamePlayerController::GetTeam(AActor* other) {
+	return  Cast<ITeamInterface>(other);
+}
+
 IDamagableInterface* ARTSGamePlayerController::GetDamagable(AActor* other)
 {
 	return  Cast<IDamagableInterface>(other);
@@ -268,24 +319,25 @@ IDamagableInterface* ARTSGamePlayerController::GetDamagable(AActor* other)
 
 void ARTSGamePlayerController::ZoomIn()
 {
-	if (ARTSOverseerer* overseerer = Cast<ARTSOverseerer>(GetPawn()))
-	{
-		overseerer->GetCameraBoom()->TargetArmLength -= zoomRate;
+	GetOversereer()->GetCameraBoom()->TargetArmLength -= zoomRate;
 
-		if (overseerer->GetCameraBoom()->TargetArmLength < minZoom) {
-			overseerer->GetCameraBoom()->TargetArmLength = minZoom;
-		}
+	if (GetOversereer()->GetCameraBoom()->TargetArmLength < minZoom) {
+		GetOversereer()->GetCameraBoom()->TargetArmLength = minZoom;
 	}
+}
+
+ARTSOverseerer* ARTSGamePlayerController::GetOversereer() {
+	if (overseerer == NULL) {
+		overseerer = Cast<ARTSOverseerer>(GetPawn());
+	}
+	return overseerer;
 }
 
 void ARTSGamePlayerController::ZoomOut()
 {
-	if (ARTSOverseerer* overseerer = Cast<ARTSOverseerer>(GetPawn()))
-	{
-		overseerer->GetCameraBoom()->TargetArmLength += zoomRate;
+	GetOversereer()->GetCameraBoom()->TargetArmLength += zoomRate;
 
-		if (overseerer->GetCameraBoom()->TargetArmLength > maxZoom) {
-			overseerer->GetCameraBoom()->TargetArmLength = maxZoom;
-		}
+	if (GetOversereer()->GetCameraBoom()->TargetArmLength > maxZoom) {
+		GetOversereer()->GetCameraBoom()->TargetArmLength = maxZoom;
 	}
 }

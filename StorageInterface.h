@@ -41,7 +41,6 @@ public:
 	virtual TArray<FItem>& GetItems();
 	virtual void AddItem(FString name, int32 amount);
 	virtual void RemoveItem(FString name, int32 amount);
-	//virtual FItem GetItemByName(FString name);
 protected:
 		FInventory inventory;
 };

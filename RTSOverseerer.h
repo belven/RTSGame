@@ -13,6 +13,10 @@ class RTSGAME_API ARTSOverseerer : public ACharacter
 public:
 	ARTSOverseerer();
 
+	int32 GetTeam() const { return team; }
+	void SetTeam(int32 val) { team = val; }
+	int32 GetOwningPlayer() const { return owningPlayer; }
+	void SetOwningPlayer(int32 val) { owningPlayer = val; }
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* TopDownCameraComponent;
@@ -24,6 +28,8 @@ private:
 	void RemoveResource(EResourceType type, int32 amount);
 	int32 GetResource(EResourceType type);
 
+	int32 team;
+	int32 owningPlayer;
 protected:
 	virtual void BeginPlay() override;
 
