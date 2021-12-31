@@ -18,6 +18,8 @@ public:
 	virtual TArray<FItem>& GetItems();
 	virtual void AddItem(FString name, int32 amount);
 	virtual void RemoveItem(FString name, int32 amount);
+	FInventory GetInventory() const { return inventory; }
+	void SetInventory(FInventory val) { inventory = val; }
 protected:
 		FInventory inventory;
 };

@@ -14,6 +14,8 @@ class RTSGAME_API ABuilding : public AActor, public IDamagableInterface, public 
 public:
 	ABuilding();
 
+	FBuildingStats GetBuildingStats() const { return buildingStats; }
+	void SetBuildingStats(FBuildingStats val) { buildingStats = val; }
 protected:
 	virtual void BeginPlay() override;
 

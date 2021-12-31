@@ -13,6 +13,8 @@
 #include "RTSGameCharacter.h"
 #include "BaseAI.h"
 #include "CharacterDetailsUI.h"
+#include "Building.h"
+#include "StorageInterface.h"
 
 ARTSGamePlayerController::ARTSGamePlayerController()
 {
@@ -49,11 +51,18 @@ ARTSGamePlayerController::ARTSGamePlayerController()
 		materialCursors.Add(EResourceType::Food, Food_Cursor.Object);
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> characterDisplay(TEXT("WidgetBlueprint'/Game/TopDownCPP/Blueprints/CharacterDetails.CharacterDetails_C'"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> characterDisplay(TEXT("WidgetBlueprint'/Game/TopDownCPP/Blueprints/UI/CharacterDetails.CharacterDetails_C'"));
 
 	if (characterDisplay.Class != nullptr)
 	{
 		characterUItemplate = characterDisplay.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> inventory(TEXT("WidgetBlueprint'/Game/TopDownCPP/Blueprints/UI/InventoryUI_BP.InventoryUI_BP_C'"));
+
+	if (inventory.Class != nullptr)
+	{
+		inventoryTemplate = inventory.Class;
 	}
 }
 
@@ -118,11 +127,18 @@ void ARTSGamePlayerController::BeginPlay()
 	{
 		characterUI = CreateWidget<UCharacterDetailsUI>(this, characterUItemplate);
 		characterUI->AddToViewport();
-		characterUI->SetVisibility(ESlateVisibility::Visible);
+		characterUI->SetVisibility(ESlateVisibility::Hidden);
 
 		FCharacterStats cs;
 		cs.currentHealth = 123123;
 		characterUI->SetStats(cs);
+	}
+
+	if (inventoryTemplate != nullptr)
+	{
+		inventoryUI = CreateWidget<UInventoryUI>(this, inventoryTemplate);
+		inventoryUI->AddToViewport();
+		inventoryUI->SetVisibility(ESlateVisibility::Visible);
 	}
 }
 
@@ -206,25 +222,33 @@ void ARTSGamePlayerController::OnSetDestinationReleased()
 {
 	leftMouseDown = false;
 
-	if (mouseDownTime > 0.75f) {
-		SelectUnits();
-	}
+	//if (mouseDownTime > 0.75f) 
+	SelectUnits();
+
 }
 
 void ARTSGamePlayerController::AttackTarget(IDamagableInterface* target) {
 	if (selectedUnits.Num() > 0) {
-		for (ARTSGameCharacter* c : selectedUnits) {
-			ABaseAI* con = Cast<ABaseAI>(c->GetController());
-			con->AttackTarget(target);
+		for (AActor* a : selectedUnits) {
+			if (a->IsA(ARTSGameCharacter::StaticClass())) {
+				ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
+
+				ABaseAI* con = Cast<ABaseAI>(c->GetController());
+				con->AttackTarget(target);
+			}
 		}
 	}
 }
 
 void ARTSGamePlayerController::GatherResources(IResourceInterface* res) {
 	if (selectedUnits.Num() > 0) {
-		for (ARTSGameCharacter* c : selectedUnits) {
-			ABaseAI* con = Cast<ABaseAI>(c->GetController());
-			con->GatherResource(res);
+		for (AActor* a : selectedUnits) {
+			if (a->IsA(ARTSGameCharacter::StaticClass())) {
+				ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
+
+				ABaseAI* con = Cast<ABaseAI>(c->GetController());
+				con->GatherResource(res);
+			}
 		}
 	}
 }
@@ -243,10 +267,6 @@ void ARTSGamePlayerController::RightClick()
 
 		if (isDamagable) {
 			IDamagableInterface* damagable = GetDamagable(targetFound);
-
-			FCharacterStats cs;
-			cs.currentHealth = damagable->GetHealth();
-			characterUI->SetStats(cs);
 
 			if (damagable->GetHealth() > 0) {
 				ITeamInterface* team = GetTeam(targetFound);
@@ -275,9 +295,13 @@ void ARTSGamePlayerController::RightClick()
 void ARTSGamePlayerController::MoveUnits(FVector loc)
 {
 	if (selectedUnits.Num() > 0) {
-		for (ARTSGameCharacter* c : selectedUnits) {
-			ABaseAI* con = Cast<ABaseAI>(c->GetController());
-			con->MoveAI(loc);
+		for (AActor* a : selectedUnits) {
+			if (a->IsA(ARTSGameCharacter::StaticClass())) {
+				ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
+
+				ABaseAI* con = Cast<ABaseAI>(c->GetController());
+				con->MoveAI(loc);
+			}
 		}
 	}
 }
@@ -292,14 +316,51 @@ void ARTSGamePlayerController::SelectUnits()
 
 	if (actors.Num() > 0) {
 		selectedUnits.Empty();
+
 		for (AActor* a : actors) {
 			if (a->IsA(ARTSGameCharacter::StaticClass())) {
 				ARTSGameCharacter* character = Cast<ARTSGameCharacter>(a);
 
 				if (character->GetType() != ECharacterType::Animal)
-					selectedUnits.Add(character);
+					selectedUnits.Add(a);
+			}
+			else if (a->IsA(ABuilding::StaticClass()))
+			{
+				selectedUnits.Add(a);
 			}
 		}
+
+		GenerateUI();
+	}
+}
+
+void ARTSGamePlayerController::GenerateUI() {
+	if (selectedUnits.Num() > 0) {
+		inventoryUI->SetVisibility(ESlateVisibility::Visible);
+		characterUI->SetVisibility(ESlateVisibility::Visible);
+
+		AActor* a = selectedUnits[0];
+
+		if (a->IsA(ABuilding::StaticClass())) {
+			ABuilding* building = Cast<ABuilding>(a);
+			characterUI->SetStats(building->GetBuildingStats());
+
+			if (building->Implements<UStorageInterface>()) {
+				IStorageInterface* si = Cast<IStorageInterface>(building);
+				inventoryUI->SetInventory(si->GetInventory());
+			}
+		}
+		else if (a->IsA(ARTSGameCharacter::StaticClass()))
+		{
+			ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
+			characterUI->SetStats(c->GetStats());
+			inventoryUI->SetInventory(c->GetStats().inventory);
+			inventoryUI->GenerateInventory();
+		}
+	}
+	else {
+		inventoryUI->SetVisibility(ESlateVisibility::Hidden);
+		characterUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 

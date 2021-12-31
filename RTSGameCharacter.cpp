@@ -21,9 +21,9 @@ ARTSGameCharacter::ARTSGameCharacter() : Super()
 
 	stats.currentHealth = 100;
 	stats.maxHealth = 100;
-	stats.inventory.capacity = 20;
+	stats.inventory.capacity = 100;
 	stats.gatherAmount = 5;
-
+	stats.unitName = "Character";
 	AIControllerClass = ABaseAI::StaticClass();
 }
 

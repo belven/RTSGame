@@ -6,6 +6,7 @@ ABuilding::ABuilding()
 
 	buildingStats.maxHealth = 1000;
 	buildingStats.currentHealth = buildingStats.maxHealth;
+	buildingStats.unitName = "Building";
 }
 
 void ABuilding::BeginPlay()

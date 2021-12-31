@@ -4,6 +4,7 @@
 #include "ResourceInterface.h"
 #include "DamagableInterface.h"
 #include "CharacterDetailsUI.h"
+#include "InventoryUI.h"
 #include "RTSGamePlayerController.generated.h"
 
 class UDecalComponent;
@@ -42,6 +43,7 @@ protected:
 	void MoveUnits(FVector loc);
 	void SelectUnits();
 
+	void GenerateUI();
 	IResourceInterface* GetResource(AActor* other);
 	ITeamInterface* GetTeam(AActor* other);
 	IDamagableInterface* GetDamagable(AActor* other);
@@ -50,7 +52,7 @@ protected:
 	ARTSOverseerer* GetOversereer();
 	void ZoomOut();
 private:
-	TArray<ARTSGameCharacter*> selectedUnits;
+	TArray<AActor*> selectedUnits;
 	TMap<EResourceType, UMaterial*> materialCursors;
 	UDecalComponent* CursorToWorld;
 
@@ -73,4 +75,7 @@ private:
 
 	TSubclassOf<UUserWidget> characterUItemplate;
 	UCharacterDetailsUI* characterUI;
+
+	TSubclassOf<UUserWidget> inventoryTemplate;
+	UInventoryUI* inventoryUI;
 };
