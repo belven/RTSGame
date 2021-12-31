@@ -5,48 +5,8 @@
 #include "DamagableInterface.h"
 #include "ResourceInterface.h"
 #include "TeamInterface.h"
+#include "Enums.h"
 #include "RTSGameCharacter.generated.h"
-
-UENUM(BlueprintType)
-enum class  ECharacterType : uint8 {
-	Worker,
-	Military,
-	Animal,
-	End
-};
-
-USTRUCT(BlueprintType)
-struct FCharacterStats
-{
-	GENERATED_USTRUCT_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		float  currentHealth;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		float  maxHealth;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		int32  carryWeight;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		FString characterName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		ECharacterType characterType;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		int32  team;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		int32  owner;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		int32  gatherAmount;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		TMap<EResourceType, FResourceStats> resources;
-};
 
 UCLASS(Blueprintable)
 class ARTSGameCharacter : public ACharacter, public IDamagableInterface, public ITeamInterface

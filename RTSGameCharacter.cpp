@@ -21,7 +21,7 @@ ARTSGameCharacter::ARTSGameCharacter() : Super()
 
 	stats.currentHealth = 100;
 	stats.maxHealth = 100;
-	stats.carryWeight = 20;
+	stats.inventory.capacity = 20;
 	stats.gatherAmount = 5;
 
 	AIControllerClass = ABaseAI::StaticClass();
@@ -30,15 +30,15 @@ ARTSGameCharacter::ARTSGameCharacter() : Super()
 int32 ARTSGameCharacter::GetWeight()
 {
 	int32 wieght = 0;
-	for (TPair<EResourceType, FResourceStats>& res : stats.resources) {
-		wieght += res.Value.amount;
+	for (FItem item : stats.inventory.items) {
+		wieght += item.amount;
 	}
 	return wieght;
 }
 
 int32 ARTSGameCharacter::GetCarryWeight()
 {
-	return stats.carryWeight;
+	return stats.inventory.capacity;
 }
 
 int32 ARTSGameCharacter::GetGatherAmount()
@@ -53,17 +53,17 @@ FCharacterStats& ARTSGameCharacter::GetStats()
 
 void ARTSGameCharacter::RecieveResources(int32 amount, IResourceInterface* ri)
 {
-	FResourceStats* resStats = stats.resources.Find(ri->GetType());
+	FItem* itemFound = stats.inventory.FindItem(ri->GetEnumName());
 
-	if (resStats == NULL) {
-		FResourceStats res;
-		res.amount = amount;
-		res.resourceType = ri->GetType();
+	if (itemFound == NULL) {
+		FItem item;
+		item.amount = amount;
+		item.itemName = ri->GetEnumName();
 
-		stats.resources.Add(res.resourceType, res);
+		stats.inventory.items.Add(item);
 	}
 	else {
-		resStats->amount += amount;
+		itemFound->amount += amount;
 	}
 }
 

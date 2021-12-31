@@ -10,7 +10,7 @@ void IStorageInterface::AddItem(FString name, int32 amount)
 	bool itemFound = false;
 
 	for (FItem& item : GetItems()) {
-		if (item.name.Equals(name)) {
+		if (item.itemName.Equals(name)) {
 			item.amount += amount;
 			itemFound = true;
 			break;
@@ -19,7 +19,7 @@ void IStorageInterface::AddItem(FString name, int32 amount)
 
 	if (!itemFound) {
 		FItem item;
-		item.name = name;
+		item.itemName = name;
 		item.amount = amount;
 		GetItems().Add(item);
 	}
@@ -28,7 +28,7 @@ void IStorageInterface::AddItem(FString name, int32 amount)
 void IStorageInterface::RemoveItem(FString name, int32 amount)
 {
 	for (FItem item : GetItems()) {
-		if (item.name.Equals(name)) {
+		if (item.itemName.Equals(name)) {
 			item.amount -= amount;
 			break;
 		}

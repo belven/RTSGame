@@ -37,6 +37,7 @@ void ABaseAI::Tick(float DeltaTime)
 	if (canPerformActions && GetTargetActor() != nullptr) {
 			if (FVector::Distance(GetCharacter()->GetActorLocation(), bbLocation) < (bbExtent.GetAbsMax() * 2)) {
 				canPerformActions = false;
+				StopMovement();
 
 				switch (currentAction) {
 				case EActionType::Attack:
@@ -68,18 +69,6 @@ void ABaseAI::Tick(float DeltaTime)
 	}
 }
 
-const FString ABaseAI::EnumToString(const TCHAR* Enum, int32 EnumValue)
-{
-	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, Enum, true);
-	if (!EnumPtr)
-		return NSLOCTEXT("Invalid", "Invalid", "Invalid").ToString();
-
-#if WITH_EDITOR
-	return EnumPtr->GetDisplayNameTextByValue(EnumValue).ToString();
-#else
-	return EnumPtr->GetEnumName(EnumValue);
-#endif
-}
 
 void ABaseAI::DepositeResource() {
 	if (!GetTargetActor()->Implements<UStorageInterface>()) {
@@ -96,12 +85,11 @@ void ABaseAI::DepositeResource() {
 	else {
 		IStorageInterface* storage = Cast<IStorageInterface>(GetTargetActor());
 
-		for (TPair<EResourceType, FResourceStats>& res : GetRTSCharacter()->GetStats().resources) {
-			FString enumName = EnumToString(TEXT("EResourceType"), static_cast<uint8>(res.Value.resourceType));
-			storage->AddItem(enumName, res.Value.amount);
+		for (FItem& item : GetRTSCharacter()->GetStats().inventory.items) {
+			storage->AddItem(item.itemName, item.amount);
 		}
 
-		GetRTSCharacter()->GetStats().resources.Empty();
+		GetRTSCharacter()->GetStats().inventory.items.Empty();
 
 		if (preiviousTarget->Implements<UResourceInterface>()) {
 			SetTargetActor(preiviousTarget);

@@ -9,12 +9,15 @@ class RTSGAME_API UCharacterDetailsUI : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable, Category = "Character Stats")
+	UFUNCTION(BlueprintCallable, Category = "Unit Stats")
+		FString GetName();
+
+	UFUNCTION(BlueprintCallable, Category = "Unit Stats")
 		float GetHealth();
 
-	FCharacterStats GetStats() const { return stats; }
-	void SetStats(FCharacterStats val) { stats = val; }
+	FUnitStats GetStats() const { return stats; }
+	void SetStats(FUnitStats val) { stats = val; }
 private:
-	FCharacterStats stats;
+	FUnitStats stats;
 
 };

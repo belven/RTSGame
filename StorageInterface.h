@@ -1,31 +1,8 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "Enums.h"
 #include "StorageInterface.generated.h"
-
-USTRUCT(BlueprintType)
-struct FItem
-{
-	GENERATED_USTRUCT_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-		FString name;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-		int32 amount;
-};
-
-USTRUCT(BlueprintType)
-struct FInventory
-{
-	GENERATED_USTRUCT_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-		TArray<FItem> items;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-		int32 capacity;
-};
 
 UINTERFACE(MinimalAPI)
 class UStorageInterface : public UInterface

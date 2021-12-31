@@ -4,17 +4,6 @@
 #include "ResourceInterface.h"
 #include "Resource.generated.h"
 
-USTRUCT(BlueprintType)
-struct FResourceStats
-{
-	GENERATED_USTRUCT_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		float  amount;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		EResourceType resourceType;
-};
 
 UCLASS()
 class RTSGAME_API AResource : public AActor, public IResourceInterface
