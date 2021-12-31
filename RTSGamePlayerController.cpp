@@ -277,7 +277,7 @@ void ARTSGamePlayerController::MoveUnits(FVector loc)
 	if (selectedUnits.Num() > 0) {
 		for (ARTSGameCharacter* c : selectedUnits) {
 			ABaseAI* con = Cast<ABaseAI>(c->GetController());
-			con->MoveToLocation(loc);
+			con->MoveAI(loc);
 		}
 	}
 }

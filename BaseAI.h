@@ -36,14 +36,21 @@ public:
 	ARTSGameCharacter* GetRTSCharacter();
 
 	AActor* GetTargetActor() const { return targetActor; }
-	void SetTargetActor(AActor* val) { preiviousTarget = targetActor; targetActor = val; }
+	void SetTargetActor(AActor* val);
+	void MoveAI(FVector loc);
+
 private:
 	FTimerHandle ActionRate;
 	AActor* preiviousTarget;
 	AActor* targetActor;
 	EActionType currentAction;
+	
 	float actionDelay;
+	FVector bbLocation;
+	FVector bbExtent;
+
 	ARTSGameCharacter* rtsCharacter;
+
 
 	bool canPerformActions;
 	void CanPerformActions();

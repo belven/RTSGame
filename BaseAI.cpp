@@ -14,42 +14,57 @@ ABaseAI::ABaseAI() : Super()
 	actionDelay = 0.5f;
 }
 
+void ABaseAI::SetTargetActor(AActor* val)
+{
+	preiviousTarget = targetActor; 
+	targetActor = val;
+
+	if (targetActor != nullptr) {
+		targetActor->GetActorLocationBounds(true, bbLocation, bbExtent);		
+	}
+}
+
+void ABaseAI::MoveAI(FVector loc)
+{
+	targetActor = nullptr;
+	MoveToLocation(loc);
+}
+
 void ABaseAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	if (canPerformActions && GetTargetActor() != nullptr) {
+			if (FVector::Distance(GetCharacter()->GetActorLocation(), bbLocation) < (bbExtent.GetAbsMax() * 2)) {
+				canPerformActions = false;
 
-		if (FVector::Distance(GetCharacter()->GetActorLocation(), GetTargetActor()->GetActorLocation()) < 500) {
-			canPerformActions = false;
+				switch (currentAction) {
+				case EActionType::Attack:
+					DamageTarget();
+					break;
+				case EActionType::Gather:
+					Gather();
+					break;
+				case EActionType::DepositingResources:
+					DepositeResource();
+					break;
+				case EActionType::Build:
+					break;
+				case EActionType::Move:
+					break;
+				case EActionType::Patrol:
+					break;
+				case EActionType::End:
+					break;
+				default:
+					break;
+				}
 
-			switch (currentAction) {
-			case EActionType::Attack:
-				DamageTarget();
-				break;
-			case EActionType::Gather:
-				Gather();
-				break;
-			case EActionType::DepositingResources:
-				DepositeResource();
-				break;
-			case EActionType::Build:
-				break;
-			case EActionType::Move:
-				break;
-			case EActionType::Patrol:
-				break;
-			case EActionType::End:
-				break;
-			default:
-				break;
+				GetWorld()->GetTimerManager().SetTimer(ActionRate, this, &ABaseAI::CanPerformActions, actionDelay);
 			}
-
-			GetWorld()->GetTimerManager().SetTimer(ActionRate, this, &ABaseAI::CanPerformActions, actionDelay);
-		}
-		else {
-			MoveToActor(GetTargetActor());
-		}
+			else {
+				MoveToActor(GetTargetActor());
+			}
 	}
 }
 
@@ -91,7 +106,7 @@ void ABaseAI::DepositeResource() {
 		if (preiviousTarget->Implements<UResourceInterface>()) {
 			SetTargetActor(preiviousTarget);
 			currentAction = EActionType::Gather;
-		}			
+		}
 	}
 }
 
