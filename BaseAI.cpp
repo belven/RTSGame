@@ -89,7 +89,7 @@ void ABaseAI::DepositeResource() {
 			storage->AddItem(item.itemName, item.amount);
 		}
 
-		GetRTSCharacter()->GetStats().inventory.items.Empty();
+		GetRTSCharacter()->ClearInventory();
 
 		if (preiviousTarget->Implements<UResourceInterface>()) {
 			SetTargetActor(preiviousTarget);
@@ -110,8 +110,8 @@ void ABaseAI::Gather() {
 			// Find the lowest amount to gather, either the resources has less than we can carry / gather or we lack the space to gather fully
 			int32 amountToTake = MIN(amount, space);
 			amountToTake = MIN(GetRTSCharacter()->GetGatherAmount(), amountToTake);
-			ri->TakeResources(amountToTake);
 
+			ri->TakeResources(amountToTake);
 			GetRTSCharacter()->RecieveResources(amountToTake, ri);
 		}
 		// We ran out of space so return to storage
@@ -123,10 +123,7 @@ void ABaseAI::Gather() {
 	else if (space > 0) {
 		TArray<AActor*> resourceActors;
 		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UResourceInterface::StaticClass(), resourceActors);
-
-		if (resourceActors.Num() == 0) {
-			currentAction = EActionType::DepositingResources;
-		}
+		bool resFound = false;
 
 		for (AActor* res : resourceActors) {
 			IResourceInterface* resi = Cast<IResourceInterface>(res);
@@ -140,21 +137,28 @@ void ABaseAI::Gather() {
 					if (damagei->GetHealth() > 0) {
 						// Attack the target
 						SetTargetActor(res);
+						resFound = true;
 						currentAction = EActionType::Attack;
 						break;
 					}
 					// They're dead, so gather from it
 					else {
 						SetTargetActor(res);
+						resFound = true;
 						break;
 					}
 				}
 				// They can't be attacked, so gather from it
 				else {
 					SetTargetActor(res);
+					resFound = true;
 					break;
 				}
 			}
+		}
+		
+		if (resourceActors.Num() == 0 || !resFound) {
+			currentAction = EActionType::DepositingResources;
 		}
 	}
 	// We ran out of space so return to storage

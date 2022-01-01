@@ -8,6 +8,8 @@
 #include "Enums.h"
 #include "RTSGameCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryChange, FInventory, newInventory);
+
 UCLASS(Blueprintable)
 class ARTSGameCharacter : public ACharacter, public IDamagableInterface, public ITeamInterface
 {
@@ -15,6 +17,8 @@ class ARTSGameCharacter : public ACharacter, public IDamagableInterface, public 
 
 public:
 	ARTSGameCharacter();
+
+	FInventoryChange inventoryChange;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		FCharacterStats stats;
@@ -26,6 +30,7 @@ public:
 	virtual int32 GetGatherAmount();
 	virtual FCharacterStats& GetStats();
 
+	void ClearInventory();
 	virtual void RecieveResources(int32 amount, IResourceInterface* ri);
 
 	virtual void Tick(float DeltaSeconds) override;

@@ -64,6 +64,13 @@ ARTSGamePlayerController::ARTSGamePlayerController()
 	{
 		inventoryTemplate = inventory.Class;
 	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> contextUI(TEXT("WidgetBlueprint'/Game/TopDownCPP/Blueprints/UI/ContextUI_BP.ContextUI_BP_C'"));
+
+	if (contextUI.Class != nullptr)
+	{
+		contextTemplate = contextUI.Class;
+	}	
 }
 
 void ARTSGamePlayerController::OnPossess(APawn* InPawn)
@@ -126,19 +133,28 @@ void ARTSGamePlayerController::BeginPlay()
 	if (characterUItemplate != nullptr)
 	{
 		characterUI = CreateWidget<UCharacterDetailsUI>(this, characterUItemplate);
-		characterUI->AddToViewport();
+		//characterUI->AddToViewport();
 		characterUI->SetVisibility(ESlateVisibility::Hidden);
 
 		FCharacterStats cs;
 		cs.currentHealth = 123123;
+		cs.unitName = "Unset";
 		characterUI->SetStats(cs);
 	}
 
 	if (inventoryTemplate != nullptr)
 	{
 		inventoryUI = CreateWidget<UInventoryUI>(this, inventoryTemplate);
-		inventoryUI->AddToViewport();
+		//inventoryUI->AddToViewport();
 		inventoryUI->SetVisibility(ESlateVisibility::Visible);
+	}
+
+	if (contextTemplate != nullptr)
+	{
+		contextUnitUI = CreateWidget<UContextUnitUI>(this, contextTemplate);
+		contextUnitUI->SetVisibility(ESlateVisibility::Visible);
+		contextUnitUI->GenerateUI(characterUI, inventoryUI);
+		contextUnitUI->AddToViewport();
 	}
 }
 
@@ -314,6 +330,8 @@ void ARTSGamePlayerController::SelectUnits()
 	TArray<AActor*> actors;
 	selectionArea->GetOverlappingActors(actors);
 
+	ClearDelegates();
+
 	if (actors.Num() > 0) {
 		selectedUnits.Empty();
 
@@ -334,6 +352,29 @@ void ARTSGamePlayerController::SelectUnits()
 	}
 }
 
+void ARTSGamePlayerController::ClearDelegates()
+{
+	if (selectedUnits.Num() > 0) {
+		AActor* a = selectedUnits[0];
+
+		if (a->IsA(ABuilding::StaticClass())) {
+			ABuilding* building = Cast<ABuilding>(a);
+			building->healthChanged.RemoveAll(characterUI);
+
+			if (a->Implements<UStorageInterface>()) {
+				IStorageInterface* si = Cast<IStorageInterface>(a);
+				si->inventoryChange.RemoveAll(inventoryUI);
+			}
+		}
+		else if (a->IsA(ARTSGameCharacter::StaticClass()))
+		{
+			ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
+			c->inventoryChange.RemoveAll(inventoryUI);
+			c->healthChanged.RemoveAll(characterUI);
+		}
+	}
+}
+
 void ARTSGamePlayerController::GenerateUI() {
 	if (selectedUnits.Num() > 0) {
 		inventoryUI->SetVisibility(ESlateVisibility::Visible);
@@ -344,10 +385,13 @@ void ARTSGamePlayerController::GenerateUI() {
 		if (a->IsA(ABuilding::StaticClass())) {
 			ABuilding* building = Cast<ABuilding>(a);
 			characterUI->SetStats(building->GetBuildingStats());
+			building->healthChanged.AddUniqueDynamic(characterUI, &UCharacterDetailsUI::HealthChanged);
 
 			if (building->Implements<UStorageInterface>()) {
 				IStorageInterface* si = Cast<IStorageInterface>(building);
 				inventoryUI->SetInventory(si->GetInventory());
+				inventoryUI->GenerateInventory();
+				si->inventoryChange.AddUniqueDynamic(inventoryUI, &UInventoryUI::InventoryChanged);
 			}
 		}
 		else if (a->IsA(ARTSGameCharacter::StaticClass()))
@@ -356,6 +400,8 @@ void ARTSGamePlayerController::GenerateUI() {
 			characterUI->SetStats(c->GetStats());
 			inventoryUI->SetInventory(c->GetStats().inventory);
 			inventoryUI->GenerateInventory();
+			c->healthChanged.AddUniqueDynamic(characterUI, &UCharacterDetailsUI::HealthChanged);
+			c->inventoryChange.AddUniqueDynamic(inventoryUI, &UInventoryUI::InventoryChanged);
 		}
 	}
 	else {

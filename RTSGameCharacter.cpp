@@ -10,11 +10,11 @@
 ARTSGameCharacter::ARTSGameCharacter() : Super()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-	
-	GetCharacterMovement()->bOrientRotationToMovement = true; 
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
 	GetCharacterMovement()->bConstrainToPlane = true;
-	GetCharacterMovement()->bSnapToPlaneAtStart = true;	   
+	GetCharacterMovement()->bSnapToPlaneAtStart = true;
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -51,6 +51,12 @@ FCharacterStats& ARTSGameCharacter::GetStats()
 	return stats;
 }
 
+void ARTSGameCharacter::ClearInventory()
+{
+	GetStats().inventory.items.Empty();
+	inventoryChange.Broadcast(stats.inventory);
+}
+
 void ARTSGameCharacter::RecieveResources(int32 amount, IResourceInterface* ri)
 {
 	FItem* itemFound = stats.inventory.FindItem(ri->GetEnumName());
@@ -65,6 +71,8 @@ void ARTSGameCharacter::RecieveResources(int32 amount, IResourceInterface* ri)
 	else {
 		itemFound->amount += amount;
 	}
+
+	inventoryChange.Broadcast(stats.inventory);
 }
 
 void ARTSGameCharacter::Tick(float DeltaSeconds)
@@ -75,6 +83,7 @@ void ARTSGameCharacter::Tick(float DeltaSeconds)
 void ARTSGameCharacter::TakeDamage(float damage)
 {
 	stats.currentHealth -= damage;
+	healthChanged.Broadcast(stats.currentHealth);
 }
 
 float ARTSGameCharacter::GetHealth()

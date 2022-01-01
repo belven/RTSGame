@@ -4,6 +4,8 @@
 #include "Enums.h"
 #include "StorageInterface.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStorageInventoryChange, FInventory, newInventory);
+
 UINTERFACE(MinimalAPI)
 class UStorageInterface : public UInterface
 {
@@ -20,6 +22,8 @@ public:
 	virtual void RemoveItem(FString name, int32 amount);
 	FInventory GetInventory() const { return inventory; }
 	void SetInventory(FInventory val) { inventory = val; }
+
+	FStorageInventoryChange inventoryChange;
 protected:
 		FInventory inventory;
 };

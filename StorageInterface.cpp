@@ -23,6 +23,8 @@ void IStorageInterface::AddItem(FString name, int32 amount)
 		item.amount = amount;
 		GetItems().Add(item);
 	}
+
+	inventoryChange.Broadcast(inventory);
 }
 
 void IStorageInterface::RemoveItem(FString name, int32 amount)
@@ -33,4 +35,5 @@ void IStorageInterface::RemoveItem(FString name, int32 amount)
 			break;
 		}
 	}
+	inventoryChange.Broadcast(inventory);
 }

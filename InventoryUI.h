@@ -18,6 +18,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 		void SetInventory(FInventory val) { inventory = val; }
 
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+		void InventoryChanged(FInventory newInventory);
+
 private:
 	FInventory inventory;
 };

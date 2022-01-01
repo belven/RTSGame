@@ -14,6 +14,10 @@ void AAnimalAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	AAnimal* c = Cast<AAnimal>(GetCharacter());
+	if (c->GetHealth() <= 0) {
+		StopMovement();
+	}
 }
 
 void AAnimalAIController::BeginPlay()

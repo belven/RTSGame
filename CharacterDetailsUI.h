@@ -15,6 +15,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Unit Stats")
 		float GetHealth();
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory")
+		void UpdateHealth();
+
+	UFUNCTION(BlueprintCallable, Category = "Unit Stats")
+		void HealthChanged(float newHealth);
+
 	FUnitStats GetStats() const { return stats; }
 	void SetStats(FUnitStats val) { stats = val; }
 private:

@@ -22,6 +22,7 @@ void ABuilding::Tick(float DeltaTime)
 void ABuilding::TakeDamage(float damage)
 {
 	buildingStats.currentHealth -= damage;
+	healthChanged.Broadcast(buildingStats.currentHealth);
 }
 
 float ABuilding::GetHealth()

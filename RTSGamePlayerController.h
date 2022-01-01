@@ -5,6 +5,7 @@
 #include "DamagableInterface.h"
 #include "CharacterDetailsUI.h"
 #include "InventoryUI.h"
+#include "ContextUnitUI.h"
 #include "RTSGamePlayerController.generated.h"
 
 class UDecalComponent;
@@ -42,6 +43,7 @@ protected:
 	void RightClick();
 	void MoveUnits(FVector loc);
 	void SelectUnits();
+	void ClearDelegates();
 
 	void GenerateUI();
 	IResourceInterface* GetResource(AActor* other);
@@ -78,4 +80,7 @@ private:
 
 	TSubclassOf<UUserWidget> inventoryTemplate;
 	UInventoryUI* inventoryUI;
+
+	TSubclassOf<UUserWidget> contextTemplate;
+	UContextUnitUI* contextUnitUI;
 };
