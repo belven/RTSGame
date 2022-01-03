@@ -9,5 +9,5 @@ class RTSGAME_API ATownHall : public ABuilding, public IStorageInterface
 {
 	GENERATED_BODY()
 public:
-	
+	ATownHall();
 };

@@ -16,6 +16,8 @@
 #include "Building.h"
 #include "StorageInterface.h"
 
+#define mTraceChannel ECollisionChannel::ECC_Pawn
+
 ARTSGamePlayerController::ARTSGamePlayerController()
 {
 	bShowMouseCursor = true;
@@ -24,6 +26,7 @@ ARTSGamePlayerController::ARTSGamePlayerController()
 	maxZoom = 4000;
 	minZoom = 500;
 	zoomRate = 100;
+	MoveSpeed = 800.0f;
 
 	// Create a decal in the world to show the cursor's location
 	CursorToWorld = CreateDefaultSubobject<UDecalComponent>("CursorToWorld");
@@ -70,7 +73,7 @@ ARTSGamePlayerController::ARTSGamePlayerController()
 	if (contextUI.Class != nullptr)
 	{
 		contextTemplate = contextUI.Class;
-	}	
+	}
 }
 
 void ARTSGamePlayerController::OnPossess(APawn* InPawn)
@@ -84,7 +87,8 @@ void ARTSGamePlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 
-	GetHitResultUnderCursor(ECC_Visibility, true, hit);
+	GetHitResultUnderCursor(mTraceChannel, true, hit);
+	CalculateMovement(DeltaTime);
 
 	// keep updating the destination every tick while desired
 	if (leftMouseDown)
@@ -97,7 +101,9 @@ void ARTSGamePlayerController::PlayerTick(float DeltaTime)
 		centerMouseLocation = FVector((mouseStart + mouseEnd) / 2);
 		dist = FVector::Dist(mouseEnd, mouseStart) / 2;
 		selectionSize = FVector(dist, dist, 100);
-		DrawDebugBox(GetWorld(), centerMouseLocation, selectionSize, FQuat(0, 0, 0, 0), FColor::Black);
+
+		if (mouseDownTime > 0.75f)
+			DrawDebugBox(GetWorld(), centerMouseLocation, selectionSize, FQuat(0, 0, 0, 0), FColor::Black);
 	}
 	else {
 		mouseDownTime = 0;
@@ -133,20 +139,13 @@ void ARTSGamePlayerController::BeginPlay()
 	if (characterUItemplate != nullptr)
 	{
 		characterUI = CreateWidget<UCharacterDetailsUI>(this, characterUItemplate);
-		//characterUI->AddToViewport();
 		characterUI->SetVisibility(ESlateVisibility::Hidden);
-
-		FCharacterStats cs;
-		cs.currentHealth = 123123;
-		cs.unitName = "Unset";
-		characterUI->SetStats(cs);
 	}
 
 	if (inventoryTemplate != nullptr)
 	{
 		inventoryUI = CreateWidget<UInventoryUI>(this, inventoryTemplate);
-		//inventoryUI->AddToViewport();
-		inventoryUI->SetVisibility(ESlateVisibility::Visible);
+		inventoryUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 
 	if (contextTemplate != nullptr)
@@ -155,6 +154,29 @@ void ARTSGamePlayerController::BeginPlay()
 		contextUnitUI->SetVisibility(ESlateVisibility::Visible);
 		contextUnitUI->GenerateUI(characterUI, inventoryUI);
 		contextUnitUI->AddToViewport();
+	}
+}
+
+const FName ARTSGamePlayerController::MoveForwardBinding("MoveForward");
+const FName ARTSGamePlayerController::MoveRightBinding("MoveRight");
+
+void ARTSGamePlayerController::CalculateMovement(float DeltaSeconds)
+{
+	// Find movement direction
+	const float ForwardValue = GetInputAxisValue(MoveForwardBinding); // W S
+	const float RightValue = GetInputAxisValue(MoveRightBinding); // A D
+
+	// Clamp max size so that (X=1, Y=1) doesn't cause faster movement in diagonal directions
+	const FVector MoveDirection = FVector(ForwardValue, RightValue, 0.f).GetClampedToMaxSize(1.0f);
+
+	// Calculate  movement
+	const FVector Movement = MoveDirection * MoveSpeed * DeltaSeconds;
+
+	// If non-zero size, move this actor
+	if (Movement.SizeSquared() > 0.0f)
+	{
+		GetCharacter()->AddMovementInput(FRotationMatrix(GetControlRotation()).GetScaledAxis(EAxis::X), ForwardValue);
+		GetCharacter()->AddMovementInput(FRotationMatrix(GetControlRotation()).GetScaledAxis(EAxis::Y), RightValue);
 	}
 }
 
@@ -168,34 +190,24 @@ void ARTSGamePlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("ZoomIn", IE_Pressed, this, &ARTSGamePlayerController::ZoomIn);
 	InputComponent->BindAction("ZoomOut", IE_Pressed, this, &ARTSGamePlayerController::ZoomOut);
-
-	//InputComponent->BindAction("Left", IE_Pressed, this, &ARTSGamePlayerController::LeftPressed);
-	//InputComponent->BindAction("Right", IE_Pressed, this, &ARTSGamePlayerController::RightPressed);
-	//InputComponent->BindAction("Up", IE_Pressed, this, &ARTSGamePlayerController:UpPressed);
-	//InputComponent->BindAction("Down", IE_Pressed, this, &ARTSGamePlayerController::DownPressed);
-
-	//InputComponent->BindAction("Left", IE_Released, this, &ARTSGamePlayerController::LeftReleased);
-	//InputComponent->BindAction("Right", IE_Released, this, &ARTSGamePlayerController::RightReleased);
-	//InputComponent->BindAction("Up", IE_Released, this, &ARTSGamePlayerController:UpReleased);
-	//InputComponent->BindAction("Down", IE_Released, this, &ARTSGamePlayerController::DownReleased);
-
+	
 	InputComponent->BindAction("RightClick", IE_Pressed, this, &ARTSGamePlayerController::RightClick);
 
 	// support touch devices 
 	InputComponent->BindTouch(EInputEvent::IE_Pressed, this, &ARTSGamePlayerController::MoveToTouchLocation);
 	InputComponent->BindTouch(EInputEvent::IE_Repeat, this, &ARTSGamePlayerController::MoveToTouchLocation);
+
+	// set up game play key bindings
+	InputComponent->BindAxis(MoveForwardBinding);
+	InputComponent->BindAxis(MoveRightBinding);
 }
 
 void ARTSGamePlayerController::MoveToMouseCursor()
 {
-	// Trace to see what is under the mouse cursor
-	FHitResult Hit;
-	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
-
-	if (Hit.bBlockingHit)
+	if (hit.bBlockingHit)
 	{
 		// We hit something, move there
-		SetNewMoveDestination(Hit.ImpactPoint);
+		SetNewMoveDestination(hit.ImpactPoint);
 	}
 }
 
@@ -237,10 +249,7 @@ void ARTSGamePlayerController::OnSetDestinationPressed()
 void ARTSGamePlayerController::OnSetDestinationReleased()
 {
 	leftMouseDown = false;
-
-	//if (mouseDownTime > 0.75f) 
 	SelectUnits();
-
 }
 
 void ARTSGamePlayerController::AttackTarget(IDamagableInterface* target) {
@@ -249,8 +258,10 @@ void ARTSGamePlayerController::AttackTarget(IDamagableInterface* target) {
 			if (a->IsA(ARTSGameCharacter::StaticClass())) {
 				ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
 
-				ABaseAI* con = Cast<ABaseAI>(c->GetController());
-				con->AttackTarget(target);
+				if (c->GetOwningPlayer() != -1) {
+					ABaseAI* con = Cast<ABaseAI>(c->GetController());
+					con->AttackTarget(target);
+				}
 			}
 		}
 	}
@@ -262,8 +273,10 @@ void ARTSGamePlayerController::GatherResources(IResourceInterface* res) {
 			if (a->IsA(ARTSGameCharacter::StaticClass())) {
 				ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
 
-				ABaseAI* con = Cast<ABaseAI>(c->GetController());
-				con->GatherResource(res);
+				if (c->GetOwningPlayer() != -1) {
+					ABaseAI* con = Cast<ABaseAI>(c->GetController());
+					con->GatherResource(res);
+				}
 			}
 		}
 	}
@@ -271,12 +284,9 @@ void ARTSGamePlayerController::GatherResources(IResourceInterface* res) {
 
 void ARTSGamePlayerController::RightClick()
 {
-	FHitResult TraceHitResult;
-	GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
-
-	if (TraceHitResult.bBlockingHit)
+	if (hit.bBlockingHit)
 	{
-		AActor* targetFound = TraceHitResult.GetActor();
+		AActor* targetFound = hit.GetActor();
 
 		bool isDamagable = targetFound->Implements<UDamagableInterface>();
 		bool isResource = targetFound->Implements<UResourceInterface>();
@@ -303,7 +313,7 @@ void ARTSGamePlayerController::RightClick()
 			GatherResources(res);
 		}
 		else {
-			MoveUnits(TraceHitResult.Location);
+			MoveUnits(hit.Location);
 		}
 	}
 }
@@ -315,8 +325,10 @@ void ARTSGamePlayerController::MoveUnits(FVector loc)
 			if (a->IsA(ARTSGameCharacter::StaticClass())) {
 				ARTSGameCharacter* c = Cast<ARTSGameCharacter>(a);
 
-				ABaseAI* con = Cast<ABaseAI>(c->GetController());
-				con->MoveAI(loc);
+				if (c->GetOwningPlayer() != -1) {
+					ABaseAI* con = Cast<ABaseAI>(c->GetController());
+					con->MoveAI(loc);
+				}
 			}
 		}
 	}
@@ -339,8 +351,7 @@ void ARTSGamePlayerController::SelectUnits()
 			if (a->IsA(ARTSGameCharacter::StaticClass())) {
 				ARTSGameCharacter* character = Cast<ARTSGameCharacter>(a);
 
-				if (character->GetType() != ECharacterType::Animal)
-					selectedUnits.Add(a);
+				selectedUnits.Add(a);
 			}
 			else if (a->IsA(ABuilding::StaticClass()))
 			{
@@ -349,6 +360,11 @@ void ARTSGamePlayerController::SelectUnits()
 		}
 
 		GenerateUI();
+	}
+	else {
+		inventoryUI->SetVisibility(ESlateVisibility::Hidden);
+		characterUI->SetVisibility(ESlateVisibility::Hidden);
+		contextUnitUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -379,6 +395,7 @@ void ARTSGamePlayerController::GenerateUI() {
 	if (selectedUnits.Num() > 0) {
 		inventoryUI->SetVisibility(ESlateVisibility::Visible);
 		characterUI->SetVisibility(ESlateVisibility::Visible);
+		contextUnitUI->SetVisibility(ESlateVisibility::Visible);
 
 		AActor* a = selectedUnits[0];
 
@@ -407,6 +424,7 @@ void ARTSGamePlayerController::GenerateUI() {
 	else {
 		inventoryUI->SetVisibility(ESlateVisibility::Hidden);
 		characterUI->SetVisibility(ESlateVisibility::Hidden);
+		contextUnitUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 

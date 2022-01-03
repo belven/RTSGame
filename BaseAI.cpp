@@ -11,16 +11,16 @@
 ABaseAI::ABaseAI() : Super()
 {
 	canPerformActions = true;
-	actionDelay = 0.5f;
+	actionDelay = 0.1f;
 }
 
 void ABaseAI::SetTargetActor(AActor* val)
 {
-	preiviousTarget = targetActor; 
+	preiviousTarget = targetActor;
 	targetActor = val;
 
 	if (targetActor != nullptr) {
-		targetActor->GetActorLocationBounds(true, bbLocation, bbExtent);		
+		targetActor->GetActorLocationBounds(true, bbLocation, bbExtent);
 	}
 }
 
@@ -30,42 +30,50 @@ void ABaseAI::MoveAI(FVector loc)
 	MoveToLocation(loc);
 }
 
+void ABaseAI::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	InPawn->GetActorLocationBounds(true, characterBBLocation, characterBBExtent);
+}
+
 void ABaseAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	if (canPerformActions && GetTargetActor() != nullptr) {
-			if (FVector::Distance(GetCharacter()->GetActorLocation(), bbLocation) < (bbExtent.GetAbsMax() * 2)) {
-				canPerformActions = false;
-				StopMovement();
+		int32 minDistance = bbExtent.GetAbsMax() + characterBBExtent.GetAbsMax();
 
-				switch (currentAction) {
-				case EActionType::Attack:
-					DamageTarget();
-					break;
-				case EActionType::Gather:
-					Gather();
-					break;
-				case EActionType::DepositingResources:
-					DepositeResource();
-					break;
-				case EActionType::Build:
-					break;
-				case EActionType::Move:
-					break;
-				case EActionType::Patrol:
-					break;
-				case EActionType::End:
-					break;
-				default:
-					break;
-				}
+		if (FVector::Distance(GetCharacter()->GetActorLocation(), targetActor->GetActorLocation()) < (minDistance * 1.4)) {
+			canPerformActions = false;
+			StopMovement();
 
-				GetWorld()->GetTimerManager().SetTimer(ActionRate, this, &ABaseAI::CanPerformActions, actionDelay);
+			switch (currentAction) {
+			case EActionType::Attack:
+				DamageTarget();
+				break;
+			case EActionType::Gather:
+				Gather();
+				break;
+			case EActionType::DepositingResources:
+				DepositeResource();
+				break;
+			case EActionType::Build:
+				break;
+			case EActionType::Move:
+				break;
+			case EActionType::Patrol:
+				break;
+			case EActionType::End:
+				break;
+			default:
+				break;
 			}
-			else {
-				MoveToActor(GetTargetActor());
-			}
+
+			GetWorld()->GetTimerManager().SetTimer(ActionRate, this, &ABaseAI::CanPerformActions, actionDelay);
+		}
+		else {
+			MoveToActor(GetTargetActor());
+		}
 	}
 }
 
@@ -156,7 +164,7 @@ void ABaseAI::Gather() {
 				}
 			}
 		}
-		
+
 		if (resourceActors.Num() == 0 || !resFound) {
 			currentAction = EActionType::DepositingResources;
 		}

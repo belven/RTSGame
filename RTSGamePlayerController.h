@@ -26,6 +26,11 @@ public:
 protected:
 	uint32 leftMouseDown : 1;
 
+	float MoveSpeed;
+	static const FName MoveForwardBinding;
+	static const FName MoveRightBinding;
+	void CalculateMovement(float DeltaSeconds);
+
 	virtual void PlayerTick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;

@@ -38,7 +38,7 @@ public:
 	AActor* GetTargetActor() const { return targetActor; }
 	void SetTargetActor(AActor* val);
 	void MoveAI(FVector loc);
-
+	virtual void OnPossess(APawn* InPawn) override;
 private:
 	FTimerHandle ActionRate;
 	AActor* preiviousTarget;
@@ -48,6 +48,9 @@ private:
 	float actionDelay;
 	FVector bbLocation;
 	FVector bbExtent;
+
+	FVector characterBBLocation;
+	FVector characterBBExtent;
 
 	ARTSGameCharacter* rtsCharacter;
 
