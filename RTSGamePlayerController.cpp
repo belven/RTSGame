@@ -15,6 +15,7 @@
 #include "CharacterDetailsUI.h"
 #include "Building.h"
 #include "StorageInterface.h"
+#include "UnitButtons.h"
 
 #define mTraceChannel ECollisionChannel::ECC_Pawn
 
@@ -148,6 +149,7 @@ void ARTSGamePlayerController::BeginPlay()
 		inventoryUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 
+
 	if (contextTemplate != nullptr)
 	{
 		contextUnitUI = CreateWidget<UContextUnitUI>(this, contextTemplate);
@@ -190,7 +192,7 @@ void ARTSGamePlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("ZoomIn", IE_Pressed, this, &ARTSGamePlayerController::ZoomIn);
 	InputComponent->BindAction("ZoomOut", IE_Pressed, this, &ARTSGamePlayerController::ZoomOut);
-	
+
 	InputComponent->BindAction("RightClick", IE_Pressed, this, &ARTSGamePlayerController::RightClick);
 
 	// support touch devices 
@@ -365,6 +367,9 @@ void ARTSGamePlayerController::SelectUnits()
 		inventoryUI->SetVisibility(ESlateVisibility::Hidden);
 		characterUI->SetVisibility(ESlateVisibility::Hidden);
 		contextUnitUI->SetVisibility(ESlateVisibility::Hidden);
+
+		if (contextUnitUI->GetUnitButtonsUI() != NULL)
+			contextUnitUI->GetUnitButtonsUI()->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -403,6 +408,22 @@ void ARTSGamePlayerController::GenerateUI() {
 			ABuilding* building = Cast<ABuilding>(a);
 			characterUI->SetStats(building->GetBuildingStats());
 			building->healthChanged.AddUniqueDynamic(characterUI, &UCharacterDetailsUI::HealthChanged);
+			
+			if (building->unitButtonsUI != NULL) {
+				contextUnitUI->SetUnitButtonsUI(building->unitButtonsUI);
+				contextUnitUI->UpdateUnitUI();
+				contextUnitUI->GetUnitButtonsUI()->SetVisibility(ESlateVisibility::Visible);
+			}
+
+			/*TestFunc test = &ARTSGamePlayerController::GenerateUI;
+			(this->*test)();*/
+
+			//FunctionsToRun[0] = &ARTSGamePlayerController::GenerateUI;
+
+			//(this->*(FunctionsToRun[0]))();
+
+			//UUnitButtons::ButtonFunction button = &ARTSGamePlayerController::GenerateUI;
+			//unitButtonsUI->AddButton(button);
 
 			if (building->Implements<UStorageInterface>()) {
 				IStorageInterface* si = Cast<IStorageInterface>(building);

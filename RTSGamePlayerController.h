@@ -13,6 +13,9 @@ class UBoxComponent;
 class ARTSGameCharacter;
 class ARTSOverseerer;
 class ITeamInterface;
+class UUnitButtons;
+
+//typedef void (*TestFunc) (void);
 
 UCLASS()
 class ARTSGamePlayerController : public APlayerController
@@ -24,6 +27,8 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 
 protected:
+	typedef void (ARTSGamePlayerController::*FunctionPtrType)(void);
+	FunctionPtrType FunctionsToRun[10];
 	uint32 leftMouseDown : 1;
 
 	float MoveSpeed;
@@ -88,4 +93,5 @@ private:
 
 	TSubclassOf<UUserWidget> contextTemplate;
 	UContextUnitUI* contextUnitUI;
+
 };

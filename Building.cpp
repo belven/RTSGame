@@ -1,4 +1,5 @@
 #include "Building.h"
+#include "UnitButtons.h"
 
 ABuilding::ABuilding()
 {
@@ -6,12 +7,20 @@ ABuilding::ABuilding()
 
 	buildingStats.maxHealth = 1000;
 	buildingStats.currentHealth = buildingStats.maxHealth;
-	buildingStats.unitName = "Building";	
+	buildingStats.unitName = "Building";
 }
 
 void ABuilding::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
+
+	if (unitButtonsTemplate != nullptr)
+	{
+		// Should we be using GetWorld here as widget owner?
+		unitButtonsUI = CreateWidget<UUnitButtons>(GetWorld(), unitButtonsTemplate);
+		unitButtonsUI->SetVisibility(ESlateVisibility::Hidden);
+		unitButtonsUI->SetOwningUnit(this);
+	}
 }
 
 void ABuilding::Tick(float DeltaTime)

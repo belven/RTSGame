@@ -4,6 +4,7 @@
 #include "StorageInterface.h"
 #include <Kismet/GameplayStatics.h>
 #include "ResourceInterface.h"
+#include "Components/BoxComponent.h"
 
 #define MIN(a,b) (a < b) ? (a) : (b)
 #define MAX(a,b) (a > b) ? (a) : (b)
@@ -12,6 +13,8 @@ ABaseAI::ABaseAI() : Super()
 {
 	canPerformActions = true;
 	actionDelay = 0.1f;
+	selectionArea = CreateDefaultSubobject<UBoxComponent>(TEXT("selectionArea"));
+	selectionArea->SetBoxExtent(FVector(1500, 1500, 1000));
 }
 
 void ABaseAI::SetTargetActor(AActor* val)
@@ -28,12 +31,15 @@ void ABaseAI::MoveAI(FVector loc)
 {
 	targetActor = nullptr;
 	MoveToLocation(loc);
+	currentAction = EActionType::Move;
 }
 
 void ABaseAI::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	InPawn->GetActorLocationBounds(true, characterBBLocation, characterBBExtent);
+
+	//selectionArea->AttachToComponent(InPawn->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
 void ABaseAI::Tick(float DeltaTime)
@@ -42,8 +48,9 @@ void ABaseAI::Tick(float DeltaTime)
 
 	if (canPerformActions && GetTargetActor() != nullptr) {
 		int32 minDistance = bbExtent.GetAbsMax() + characterBBExtent.GetAbsMax();
-
-		if (FVector::Distance(GetCharacter()->GetActorLocation(), targetActor->GetActorLocation()) < (minDistance * 1.4)) {
+		float dist = FVector::Distance(GetCharacter()->GetActorLocation(), targetActor->GetActorLocation());
+		
+		if (dist < (minDistance * 1.4)) {
 			canPerformActions = false;
 			StopMovement();
 
@@ -58,8 +65,6 @@ void ABaseAI::Tick(float DeltaTime)
 				DepositeResource();
 				break;
 			case EActionType::Build:
-				break;
-			case EActionType::Move:
 				break;
 			case EActionType::Patrol:
 				break;
@@ -76,7 +81,6 @@ void ABaseAI::Tick(float DeltaTime)
 		}
 	}
 }
-
 
 void ABaseAI::DepositeResource() {
 	if (!GetTargetActor()->Implements<UStorageInterface>()) {
@@ -130,41 +134,12 @@ void ABaseAI::Gather() {
 	// The target ran out of resources, but we still have carry space
 	else if (space > 0) {
 		TArray<AActor*> resourceActors;
-		UGameplayStatics::GetAllActorsWithInterface(GetWorld(), UResourceInterface::StaticClass(), resourceActors);
-		bool resFound = false;
 
-		for (AActor* res : resourceActors) {
-			IResourceInterface* resi = Cast<IResourceInterface>(res);
+		GetNearbyActors(resourceActors);
+		ShuffleArray<AActor*>(resourceActors);
 
-			if (resi->GetType() == ri->GetType() && resi->GetAmount() > 0) {
-				// Is this resource that can be attacked?
-				if (res->Implements<UDamagableInterface>()) {
-					IDamagableInterface* damagei = Cast<IDamagableInterface>(res);
-
-					// Does the target have health left?
-					if (damagei->GetHealth() > 0) {
-						// Attack the target
-						SetTargetActor(res);
-						resFound = true;
-						currentAction = EActionType::Attack;
-						break;
-					}
-					// They're dead, so gather from it
-					else {
-						SetTargetActor(res);
-						resFound = true;
-						break;
-					}
-				}
-				// They can't be attacked, so gather from it
-				else {
-					SetTargetActor(res);
-					resFound = true;
-					break;
-				}
-			}
-		}
-
+		bool resFound = FindResource(ri->GetType(), resourceActors);
+		
 		if (resourceActors.Num() == 0 || !resFound) {
 			currentAction = EActionType::DepositingResources;
 		}
@@ -173,6 +148,49 @@ void ABaseAI::Gather() {
 	else {
 		currentAction = EActionType::DepositingResources;
 	}
+}
+
+bool ABaseAI::FindResource(EResourceType resType, TArray<AActor*> actors) {
+	bool resFound = false;
+
+	for (AActor* res : actors) {
+		IResourceInterface* resi = Cast<IResourceInterface>(res);
+
+		if (resi != NULL && resi->GetType() == resType && resi->GetAmount() > 0 && !res->IsUnreachable()) {
+			// Is this resource that can be attacked?
+			if (res->Implements<UDamagableInterface>()) {
+				IDamagableInterface* damagei = Cast<IDamagableInterface>(res);
+
+				// Does the target have health left?
+				if (damagei->GetHealth() > 0) {
+					// Attack the target
+					SetTargetActor(res);
+					resFound = true;
+					currentAction = EActionType::Attack;
+					break;
+				}
+				// They're dead, so gather from it
+				else {
+					SetTargetActor(res);
+					resFound = true;
+					break;
+				}
+			}
+			// They can't be attacked, so gather from it
+			else {
+				SetTargetActor(res);
+				resFound = true;
+				break;
+			}
+		}
+	}
+
+	return resFound;
+}
+
+void ABaseAI::GetNearbyActors(TArray<AActor*>& actors) {
+	selectionArea->SetWorldLocation(GetRTSCharacter()->GetActorLocation());
+	selectionArea->GetOverlappingActors(actors);
 }
 
 void ABaseAI::DamageTarget() {

@@ -105,10 +105,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		int32  gatherAmount;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		FInventory inventory;
 };
+
 
 UCLASS()
 class RTSGAME_API UEnums : public UObject

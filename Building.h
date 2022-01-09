@@ -6,6 +6,8 @@
 #include "Enums.h"
 #include "Building.generated.h"
 
+class UUnitButtons;
+
 UCLASS()
 class RTSGAME_API ABuilding : public AActor, public IDamagableInterface, public ITeamInterface
 {
@@ -29,4 +31,7 @@ public:
 	virtual float GetMaxHealth() override;
 	virtual int32 GetTeam() override;
 	virtual int32 GetOwningPlayer() override;
+
+	TSubclassOf<UUserWidget> unitButtonsTemplate;
+	UUnitButtons* unitButtonsUI;
 };

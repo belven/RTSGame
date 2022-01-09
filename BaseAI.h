@@ -7,6 +7,7 @@
 
 class ARTSGameCharacter;
 class AResource;
+class UBoxComponent;
 
 UENUM(BlueprintType)
 enum class  EActionType : uint8 {
@@ -30,6 +31,8 @@ public:
 	const FString EnumToString(const TCHAR* Enum, int32 EnumValue);
 	void DepositeResource();
 	void Gather();
+	bool FindResource(EResourceType resType, TArray<AActor*> actors);
+	void GetNearbyActors(TArray<AActor*>& actors);
 	void DamageTarget();
 	void AttackTarget(IDamagableInterface* target);
 	void GatherResource(IResourceInterface* resource);
@@ -44,6 +47,7 @@ private:
 	AActor* preiviousTarget;
 	AActor* targetActor;
 	EActionType currentAction;
+	UBoxComponent* selectionArea;
 	
 	float actionDelay;
 	FVector bbLocation;
@@ -53,9 +57,26 @@ private:
 	FVector characterBBExtent;
 
 	ARTSGameCharacter* rtsCharacter;
-
-
+	   
 	bool canPerformActions;
 	void CanPerformActions();
-	
+
+	template <class T> static void ShuffleArray(TArray<T>& arrayIn);
 };
+
+template <class T>
+void ABaseAI::ShuffleArray(TArray<T>& arrayIn)
+{
+	if (arrayIn.Num() > 0)
+	{
+		int32 LastIndex = arrayIn.Num() - 1;
+		for (int32 i = 0; i <= LastIndex; ++i)
+		{
+			int32 Index = FMath::RandRange(i, LastIndex);
+			if (i != Index)
+			{
+				arrayIn.Swap(i, Index);
+			}
+		}
+	}
+}
